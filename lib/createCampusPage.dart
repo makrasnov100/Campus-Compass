@@ -77,8 +77,9 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
                 child: Align(
                   alignment: Alignment.topCenter,
                   child: FloatingActionButton.extended(
+                    heroTag: "AddWaypointBtn",
                     onPressed: () {
-                      // Add your onPressed code here!
+                      // Add onPressed code
                     },
                     label: Text('Add Waypoint'),
                     icon: Icon(Icons.add_location),
@@ -95,8 +96,9 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
                 child: Align(
                   alignment: Alignment.topCenter,
                   child: FloatingActionButton.extended(
+                    heroTag: "AddCampusBtn",
                     onPressed: () {
-                      // Add your onPressed code here!
+                      Navigator.pop(context); // goes to entry page
                     },
                     label: Text('Done'),
                     icon: Icon(Icons.done),

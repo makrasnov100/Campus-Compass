@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+//Used Pages
+import 'createCampusPage.dart';
+import 'selectCampusPage.dart';
+
 class EntryPage extends StatefulWidget {
   
   EntryPage({Key key}): super(key: key);
@@ -56,7 +60,12 @@ class _EntryPageState extends State<EntryPage> {
                     fontSize: 30.0,
                   ),
                 ),
-                onPressed: () => {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SelectCampusPage()),
+                  );
+                },
                 splashColor: Colors.blueAccent,
               ),
             ),
@@ -75,7 +84,14 @@ class _EntryPageState extends State<EntryPage> {
                     fontSize: 30.0,
                   ),
                 ),
-                onPressed: () => {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) {
+                      return new CreateCampusPage();
+                    }),
+                  );
+                },
                 splashColor: Colors.blueAccent,
               ),
             ),

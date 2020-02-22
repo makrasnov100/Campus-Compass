@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+//Destination Pages
+import 'navigationPage.dart';
+
 class SelectCampusPage extends StatefulWidget {
   
   SelectCampusPage({Key key}): super(key: key);
@@ -70,24 +73,45 @@ class _SelectCampusPageState extends State<SelectCampusPage> {
               )
             ),
             Align(
-              alignment: Alignment.bottomCenter,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  FloatingActionButton.extended(
+              alignment: Alignment.bottomRight,
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width/2,
+                height: 100,
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: FloatingActionButton.extended(
+                    heroTag: 'GoToNavigationBtn1',
                     onPressed: () {
-                      // Add your onPressed code here!
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => NavigationPage()),
+                      );
+                    },
+                    label: Text('Select Campus'),
+                    icon: Icon(Icons.done),
+                    backgroundColor: Color.fromRGBO(0, 255, 0, 1),
+                  ),
+                ),
+              )
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width/2,
+                height: 100,
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: FloatingActionButton.extended(
+                    heroTag: 'GoToEntryBtn2',
+                    onPressed: () {
+                      Navigator.pop(context); // goes to main menu (entry page)
                     },
                     label: Text('Go Back'),
-                    icon: Icon(Icons.done),
+                    icon: Icon(Icons.arrow_back),
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
-                  SizedBox(
-                    height:20,
-                    width: MediaQuery.of(context).size.width,
-                  ),
-                ],
-              ),
+                ),
+              )
             ),
           ],
         ),
