@@ -4,6 +4,7 @@ import 'package:flare_flutter/flare_actor.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_compass/flutter_compass.dart';
+import 'dart:math' as math;
 
 class NavigationPage extends StatefulWidget {
   
@@ -27,6 +28,7 @@ class _NavigationPageState extends State<NavigationPage> {
   String title;
 
   double deviceDirection; // angle from 0 to 360 (0 is north - TODO: find if true north)
+  double arrowDirection;  // true direction for person to navigate to
 
   //Color bgColor = Color.fromRGBO(39, 187, 255, 1);
   Timer timer;
@@ -37,7 +39,7 @@ class _NavigationPageState extends State<NavigationPage> {
   _NavigationPageState(title)
   {
     //Timer Refreshing Background
-    timer = new Timer.periodic(new Duration(seconds: 1), (Timer t) => _updateBackground());
+    timer = new Timer.periodic(new Duration(seconds:1), (Timer t) => _updateBackground());
     bgColor = Color.fromRGBO(39, 187, 255, 1);
     this.title = title;
   }
@@ -49,7 +51,7 @@ class _NavigationPageState extends State<NavigationPage> {
     {
       title = "Colder";
       if(position != null)
-        arrowType = "Cold_Arrow";
+        arrowType = "Hot_Arrow"; //TODO: CHANGE once blending figured out "Cold_Arrow";
       else
         arrowType = "Static";
       setState(() {
@@ -103,10 +105,25 @@ class _NavigationPageState extends State<NavigationPage> {
       return position.toString();
   }
 
+  void setArrowDirection(double deviceDirection)
+  {
+    //No rotation if no location selected
+    if(arrowType == "Static" || deviceDirection == null)
+    {
+      arrowDirection = 0;
+    }
+    else
+    {
+      arrowDirection = deviceDirection+180;
+      //TODO: Update with new location setup
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     FlutterCompass.events.listen((double direction) {
+      setArrowDirection(direction);
       setState(() {
         deviceDirection = direction;
       });
@@ -136,20 +153,30 @@ class _NavigationPageState extends State<NavigationPage> {
             Container(
               width:400,
               height:400,
-              child:FlareActor(
-              'assets/compass.flr',
-              alignment: Alignment.center,
-              fit: BoxFit.contain,
-              animation: arrowType,
-              )
+              child:Transform.rotate(
+                alignment: Alignment.center,
+                angle: arrowDirection * -math.pi / 180,
+                child:FlareActor(
+                  'assets/compass.flr',
+                  alignment: Alignment.center,
+                  fit: BoxFit.contain,
+                  animation: arrowType,
+                ),
+              ),
             ),
             Text(
               deviceDirection.toString(),//getPositionString(),
               style: Theme.of(context).textTheme.display1,
             ),
           ],
+
         ),
-      ),// This trailing comma makes auto-formatting nicer for build methods.
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: getLocation,
+        tooltip: 'Increment',
+        child: Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
       backgroundColor: bgColor,
     );
   }
