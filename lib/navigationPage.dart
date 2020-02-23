@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 
 class NavigationPage extends StatefulWidget {
   
@@ -24,6 +25,8 @@ class _NavigationPageState extends State<NavigationPage> {
   Color bgColor = Color.fromRGBO(255, 255, 255, 1);
   String arrowType = "Static";
   String title;
+
+  double deviceDirection; // angle from 0 to 360 (0 is north - TODO: find if true north)
 
   //Color bgColor = Color.fromRGBO(39, 187, 255, 1);
   Timer timer;
@@ -101,6 +104,16 @@ class _NavigationPageState extends State<NavigationPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    FlutterCompass.events.listen((double direction) {
+      setState(() {
+        deviceDirection = direction;
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
@@ -131,17 +144,12 @@ class _NavigationPageState extends State<NavigationPage> {
               )
             ),
             Text(
-              getPositionString(),
+              deviceDirection.toString(),//getPositionString(),
               style: Theme.of(context).textTheme.display1,
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: getLocation,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),// This trailing comma makes auto-formatting nicer for build methods.
       backgroundColor: bgColor,
     );
   }

@@ -20,9 +20,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.amber
       ),
-
       home: EntryPage(),//MyHomePage(title: 'Campus Compass'),
-
     );
   }
 }
