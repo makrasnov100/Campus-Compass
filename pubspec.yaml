@@ -20,7 +20,8 @@ dependencies:
   flutter:
     sdk: flutter
   flare_flutter: ^2.0.1
-  google_maps_flutter: ^0.5.11
+  google_maps_flutter: ^0.5.24+1
+  google_maps_webservice: ^0.0.16
   geolocator: ^4.0.3
   permission_handler: '^4.2.0+hotfix.3'
   flutter_compass: '^0.3.4'

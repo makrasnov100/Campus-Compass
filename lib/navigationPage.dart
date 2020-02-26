@@ -4,7 +4,8 @@ import 'package:flare_flutter/flare_actor.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_compass/flutter_compass.dart';
-import 'dart:math' as math;
+
+import 'dart:math' as math; //get correct arrow angle
 
 class NavigationPage extends StatefulWidget {
   

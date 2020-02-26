@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_webservice/places.dart';
 
 class CreateCampusPage extends StatefulWidget {
   
@@ -13,16 +14,73 @@ class CreateCampusPage extends StatefulWidget {
 class _CreateCampusPageState extends State<CreateCampusPage> {
   Color bgColor;
   GoogleMapController mapController;
+  final placesAPI = new GoogleMapsPlaces(apiKey: "AIzaSyCG1pRyp5gwu-O74mtUWmPyudqWQGGVO-g");
 
-  final LatLng _center = const LatLng(45.521563, -122.677433);
+  List<PlacesSearchResult> latestSearchResult;
+  final Map<MarkerId, Marker> mapMarkers = <MarkerId, Marker>{};
+
+  // TODO LARGE: replace with current position (GPS)
+  final LatLng _center = const LatLng(47.710406, -117.397041);
+
 
   _CreateCampusPageState()
   {
     bgColor = Color.fromRGBO(39, 187, 255, 1);
   }
 
-  void _onMapCreated(GoogleMapController controller) {
+  void _onMapCreated(GoogleMapController controller){
     mapController = controller;
+  }
+
+  void _suggestPlaces(String userInput) async{
+    PlacesSearchResponse response = await placesAPI.searchByText(userInput, location: Location(_center.latitude, _center.longitude));
+    if(response.isOkay)
+    {
+      latestSearchResult = response.results;
+      _showResultsOnMap(0, response.results.length);  //Shows top three results on the map
+    }
+    else
+    {
+      //TODO: determine root of responce fail
+    }
+  }
+
+  void _showResultsOnMap(int startIdx, int count) {
+
+    //Remove Current marker info if any
+    mapMarkers.clear();
+
+    int curIdx = startIdx;
+    while(curIdx - startIdx < count && curIdx < latestSearchResult.length) // make sure within place bounds
+    {
+      //add marker of place
+      final MarkerId markerId = MarkerId("create_"+mapMarkers.length.toString());
+      _addPlaceMarker(latestSearchResult[curIdx], markerId);
+
+      curIdx++;
+    }
+
+    //Update map TODO HUGE: make background map and search field a seperate widget
+    setState(() { });
+  }
+
+  //Reference: https://stackoverflow.com/questions/55000043/flutter-how-to-add-marker-to-google-maps-with-new-marker-api
+  void _addPlaceMarker(PlacesSearchResult place, MarkerId markerId)
+  {
+    final Marker marker = Marker(
+      markerId: markerId,
+      position: LatLng(
+        place.geometry.location.lat,
+        place.geometry.location.lng,
+      ),
+      infoWindow: InfoWindow(title: place.name, snippet: place.formattedAddress),
+      onTap: () {
+        //TODO: Add on marker tap action
+      },
+    );
+
+    //TODO: add the rest of place details to info window
+    mapMarkers[markerId] = marker;
   }
 
   @override
@@ -41,6 +99,7 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
                   target: _center,
                   zoom: 15.0,
                 ),
+                markers: Set<Marker>.of(mapMarkers.values),
               ),
             ),
             Align(
@@ -55,7 +114,7 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
                   Container(
                     width: MediaQuery.of(context).size.width - 20,
                     height: 100,
-                    child: TextFormField(
+                    child: TextField(
                       obscureText: false,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
@@ -64,6 +123,7 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
                         //fillColor: Color.fromRGBO(255, 255, 255, 1),
                         //focusColor: Color.fromRGBO(255, 255, 255, 1),
                       ),
+                      onSubmitted: _suggestPlaces,
                     ),
                   ),
                 ],
