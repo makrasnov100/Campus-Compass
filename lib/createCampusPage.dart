@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
+import 'package:flutter/services.dart' show rootBundle;
 
 class CreateCampusPage extends StatefulWidget {
   
@@ -17,11 +20,12 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
   final placesAPI = new GoogleMapsPlaces(apiKey: "AIzaSyCG1pRyp5gwu-O74mtUWmPyudqWQGGVO-g");
 
   List<PlacesSearchResult> latestSearchResult;
-  final Map<MarkerId, Marker> mapMarkers = <MarkerId, Marker>{};
-
+  final Map<MarkerId, Marker> searchMarkers = <MarkerId, Marker>{};
+  final Map<MarkerId, Marker> permanentMarkers = <MarkerId, Marker>{};
+  int permenantMarkerCount = 0;
+  
   // TODO LARGE: replace with current position (GPS)
   final LatLng _center = const LatLng(47.710406, -117.397041);
-
 
   _CreateCampusPageState()
   {
@@ -48,14 +52,14 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
   void _showResultsOnMap(int startIdx, int count) {
 
     //Remove Current marker info if any
-    mapMarkers.clear();
+    searchMarkers.clear();
 
     int curIdx = startIdx;
     while(curIdx - startIdx < count && curIdx < latestSearchResult.length) // make sure within place bounds
     {
       //add marker of place
-      final MarkerId markerId = MarkerId("create_"+mapMarkers.length.toString());
-      _addPlaceMarker(latestSearchResult[curIdx], markerId);
+      final MarkerId markerId = MarkerId("create_"+searchMarkers.length.toString());
+      searchMarkers[markerId] = _createPlaceMarker(latestSearchResult[curIdx], markerId);
 
       curIdx++;
     }
@@ -64,8 +68,35 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
     setState(() { });
   }
 
+  _addWaypoint() async {
+    //Search if any of the search markers are currently selected
+    
+    Marker selectedMarker;
+    for (MarkerId id in searchMarkers.keys)
+    {
+      bool isWindowShown = await mapController.isMarkerInfoWindowShown(id);
+      if(isWindowShown)
+      {
+        selectedMarker = searchMarkers[id];
+        break;
+      }
+    }
+
+    //Add waypoint at marker if one is selected
+    if(selectedMarker != null)
+    {
+      permenantMarkerCount++;
+      final MarkerId markerId = MarkerId("permanent_"+permenantMarkerCount.toString());
+      permanentMarkers[markerId] = await _createPlaceMarkerScratch(selectedMarker.position, selectedMarker.infoWindow.title, "", markerId, markerIconAsset:"assets/greenMarker.png");
+    }
+    
+    //TODO HUGE: add ability to add markers when no search markers are selected by popup
+
+    setState(() { });
+  }
+
   //Reference: https://stackoverflow.com/questions/55000043/flutter-how-to-add-marker-to-google-maps-with-new-marker-api
-  void _addPlaceMarker(PlacesSearchResult place, MarkerId markerId)
+  Marker _createPlaceMarker(PlacesSearchResult place, MarkerId markerId)
   {
     final Marker marker = Marker(
       markerId: markerId,
@@ -80,7 +111,40 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
     );
 
     //TODO: add the rest of place details to info window
-    mapMarkers[markerId] = marker;
+    return marker;
+  }
+
+  Future<Marker> _createPlaceMarkerScratch(LatLng location, String name, String description, MarkerId markerId, {String markerIconAsset = "assets/redMarker.png"}) async
+  {
+    final Uint8List markerIcon = await getBytesFromAsset(markerIconAsset, 30);
+
+    final Marker marker = Marker(
+      markerId: markerId,
+      position: location,
+      infoWindow: InfoWindow(title: name, snippet: description),
+      onTap: () {
+        //TODO: Add on marker tap action
+      },
+      icon: BitmapDescriptor.fromBytes(markerIcon)
+    );
+
+    //TODO: add the rest of place details to info window
+    return marker;
+  }
+
+  Future<Uint8List> getBytesFromAsset(String path, int width) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width);
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png)).buffer.asUint8List();
+  }
+
+  Set<Marker> getMapMarkers()
+  {
+    Set<Marker> result = Set<Marker>.of(searchMarkers.values);
+    result.addAll(Set<Marker>.of(permanentMarkers.values));
+
+    return result;
   }
 
   @override
@@ -91,7 +155,7 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
         child: Stack(
           children: <Widget>[
             SizedBox(
-              width: MediaQuery.of(context).size.width,  // or use fixed size like 200
+              width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height,
               child: GoogleMap(
                 onMapCreated: _onMapCreated,
@@ -99,7 +163,7 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
                   target: _center,
                   zoom: 15.0,
                 ),
-                markers: Set<Marker>.of(mapMarkers.values),
+                markers: getMapMarkers(),
               ),
             ),
             Align(
@@ -139,7 +203,7 @@ class _CreateCampusPageState extends State<CreateCampusPage> {
                   child: FloatingActionButton.extended(
                     heroTag: "AddWaypointBtn",
                     onPressed: () {
-                      // Add onPressed code
+                      _addWaypoint();
                     },
                     label: Text('Add Waypoint'),
                     icon: Icon(Icons.add_location),
